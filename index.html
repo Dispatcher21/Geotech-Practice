@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geotech FE Practice Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e12;
+  --surface: #13161c;
+  --surface2: #1c2029;
+  --border: #2a2f3a;
+  --border2: #3a414f;
+  --text: #dde3ee;
+  --muted: #7a8497;
+  --accent: #e8a020;
+  --accent-dim: rgba(232,160,32,0.12);
+  --green: #3ecf6a;
+  --green-dim: rgba(62,207,106,0.10);
+  --red: #f05050;
+  --red-dim: rgba(240,80,80,0.10);
+  --blue: #4c9fe0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(232,160,32,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,160,32,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Sticky Score Bar ─── */
+.score-bar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(12,14,18,0.90);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.score-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+.score-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.progress-track {
+  width: 180px;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0;
+  transition: width 0.35s ease;
+}
+
+/* ─── Layout ─── */
+.wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 44px 24px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Header ─── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 28px;
+  margin-bottom: 8px;
+}
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+header h1 {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: #eef2ff;
+}
+.header-meta {
+  margin-top: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* ─── Section divider ─── */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 44px 0 18px;
+}
+.section-head span {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── Question card ─── */
+.qcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.qcard:hover { border-color: var(--border2); }
+.qcard.state-correct { border-color: var(--green); background: var(--green-dim); }
+.qcard.state-wrong   { border-color: var(--red);   background: var(--red-dim); }
+
+.q-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.q-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.q-body { flex: 1; font-size: 14.5px; }
+
+/* ─── Image placeholder ─── */
+.fig-placeholder {
+  background: var(--surface2);
+  border: 1.5px dashed var(--border2);
+  border-radius: 6px;
+  padding: 18px;
+  margin: 12px 0;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.fig-placeholder .fig-title {
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+.fig-placeholder img {
+  max-width: 100%;
+  border-radius: 4px;
+  display: none; /* shown by JS once src set */
+}
+.fig-placeholder .fig-note {
+  font-size: 10px;
+  color: #444c5a;
+}
+
+/* ─── Options ─── */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  color: var(--text);
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  width: 100%;
+}
+.opt:hover:not(:disabled) {
+  background: #242836;
+  border-color: var(--accent);
+}
+.opt:disabled { cursor: default; }
+.opt .ltr {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 18px;
+  flex-shrink: 0;
+}
+.opt.opt-correct { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.opt.opt-correct .ltr { color: var(--green); }
+.opt.opt-wrong   { background: var(--red-dim);   border-color: var(--red);   color: var(--red); }
+.opt.opt-wrong   .ltr { color: var(--red); }
+.opt.opt-reveal  { border-color: var(--green); opacity: 0.55; }
+
+/* ─── Explanation ─── */
+.explanation {
+  margin-top: 14px;
+  padding: 13px 15px;
+  background: var(--surface2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: var(--muted);
+  display: none;
+  line-height: 1.6;
+}
+.explanation.visible { display: block; }
+.explanation b { color: var(--accent); font-family: 'Space Mono', monospace; font-weight: 400; font-size: 11px; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+
+/* ─── SVG profile ─── */
+.profile-wrap {
+  margin: 12px 0;
+  background: var(--surface2);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* ─── Result banner ─── */
+.result {
+  margin-top: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 32px 24px;
+  text-align: center;
+  display: none;
+}
+.result.visible { display: block; }
+.result-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 52px;
+  color: var(--accent);
+  font-weight: 700;
+  line-height: 1;
+}
+.result-sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 1px;
+}
+.reset-btn {
+  margin-top: 20px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  padding: 10px 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.reset-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* image-needed badge */
+.need-crop {
+  display: inline-block;
+  background: rgba(232,160,32,0.15);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+</style>
+</head>
+<body>
+
+<div class="score-bar">
+  <span class="score-label" id="score-disp">SCORE: — / —</span>
+  <div class="score-right">
+    <span id="prog-text">0 / 27 answered</span>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">FE Civil Exam Prep</div>
+    <h1>Geotechnical Engineering Practice Quiz</h1>
+    <div class="header-meta">
+      <span>27 QUESTIONS</span>
+      <span>PHASE RELATIONS · CLASSIFICATION · SEEPAGE · SHEAR STRENGTH · CONSOLIDATION</span>
+    </div>
+  </header>
+
+  <div id="quiz"></div>
+
+  <div class="result" id="result">
+    <div class="result-num" id="final-score">0/27</div>
+    <div class="result-sub">QUESTIONS CORRECT</div>
+    <br>
+    <button class="reset-btn" onclick="reset()">↺ &nbsp;RESET QUIZ</button>
+  </div>
+</div>
+
+<script>
+// ─── IMAGE PATHS ─────────────────────────────────────────────────────────────
+// After cropping, set the file paths here.
+// Place cropped image files in the same folder as this HTML file.
+const IMAGES = {
+  "curve-a": "",   // Grain-size curve A — Soils.pdf Problem 3  (D10=0.19, D30=0.39, D60=0.49 mm)
+  "curve-b": "",   // Grain-size curve B — Soils.pdf Problem 13 (D10=0.20, D60=1.20 mm)
+  "curve-c": "",   // Grain-size curve C — Soils.pdf Problem 18 (D10=0.28, D30=0.37, D60=0.70 mm)
+  "curve-d": "",   // Grain-size curve D — FE/EIT p.18, Problems 20-21 (D10=0.19, D30=0.39, D60=0.49 mm)
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+const LTRS = ['A','B','C','D'];
+
+const questions = [
+  // ════════════════════════════════════════════
+  // SECTION 1: Phase Relationships & Index Props
+  // ════════════════════════════════════════════
+  {
+    section: "Phase Relationships & Index Properties",
+    id: 1,
+    text: "An undisturbed sample of clay has a wet mass of 100 kg, a dry mass of 93 kg, and a total volume of 0.0491 m³. The solids have a specific gravity of 2.65. The void ratio is most nearly:",
+    opts: ["0.31", "0.40", "0.61", "1.0"],
+    ans: 1,
+    exp: "V<sub>W</sub> = (100 – 93) / 1000 = 0.007 m³. V<sub>S</sub> = 93 / (2.65 × 1000) = 0.0351 m³. V<sub>A</sub> = 0.0491 – 0.007 – 0.0351 = 0.007 m³. V<sub>V</sub> = V<sub>A</sub> + V<sub>W</sub> = 0.014 m³. e = V<sub>V</sub> / V<sub>S</sub> = 0.014 / 0.0351 = 0.399 ≈ <strong>0.40</strong>.",
+  },
+  {
+    section: null,
+    id: 2,
+    text: "A saturated sample of undisturbed clay has a wet mass of 318 kg and a dry mass of 204 kg. The total volume of the sample is 0.193 m³. What is most nearly the specific gravity of the soil solids?",
+    opts: ["2.4", "2.6", "2.7", "2.9"],
+    ans: 1,
+    exp: "Since saturated, no air. m<sub>W</sub> = 318 – 204 = 114 kg → V<sub>W</sub> = 0.114 m³. V<sub>S</sub> = 0.193 – 0.114 = 0.079 m³. G<sub>S</sub> = (204 kg / 0.079 m³) / 1000 kg/m³ = <strong>2.58 ≈ 2.6</strong>.",
+  },
+  {
+    section: null,
+    id: 3,
+    text: "A soil's grain-size distribution curve is shown. Using the curve (D<sub>10</sub> = 0.19 mm, D<sub>30</sub> = 0.39 mm, D<sub>60</sub> = 0.49 mm), the coefficient of gradation C<sub>c</sub> is most nearly:",
+    fig: { key: "curve-a", title: "Grain-Size Distribution Curve A", note: "Crop needed — Soils.pdf, Problem 3" },
+    opts: ["0.17", "0.44", "1.6", "3.0"],
+    ans: 2,
+    exp: "C<sub>c</sub> = D<sub>30</sub>² / (D<sub>60</sub> · D<sub>10</sub>) = (0.39)² / (0.49 × 0.19) = 0.1521 / 0.0931 = <strong>1.63 ≈ 1.6</strong>.",
+  },
+  {
+    section: null,
+    id: 4,
+    text: "An undisturbed sample of clay has a wet mass of 30 kg, a dry mass of 23 kg, a total volume of 0.014 m³, and a specific gravity of 2.65. The void ratio is most nearly:",
+    opts: ["0.31", "0.50", "0.61", "1.00"],
+    ans: 2,
+    exp: "m<sub>W</sub> = 30 – 23 = 7 kg → V<sub>W</sub> = 0.007 m³. V<sub>S</sub> = 23 / (2.65 × 1000) = 0.0087 m³. V<sub>V</sub> = 0.014 – 0.0087 = 0.0053 m³. e = 0.0053 / 0.0087 = <strong>0.609 ≈ 0.61</strong>.",
+  },
+  {
+    section: null,
+    id: 5,
+    text: "A soil sample has a total volume of 12 cm³, a solid mass of 21.2 g, specific gravity G = 2.5, and water density ρ<sub>W</sub> = 1 g/cm³. The void ratio is most nearly:",
+    opts: ["0.42", "0.56", "0.71", "1.00"],
+    ans: 0,
+    exp: "V<sub>S</sub> = m<sub>S</sub> / (G · ρ<sub>W</sub>) = 21.2 / 2.5 = 8.48 cm³. V<sub>V</sub> = 12 – 8.48 = 3.52 cm³. e = 3.52 / 8.48 = <strong>0.415 ≈ 0.42</strong>.",
+  },
+  {
+    section: null,
+    id: 6,
+    text: "The specific gravity of a saturated soil sample is 2.70, with a total unit mass of 2400 kg/m³. The dry unit mass is most nearly:",
+    opts: ["470 kg/m³", "1500 kg/m³", "2200 kg/m³", "2500 kg/m³"],
+    ans: 2,
+    exp: "Assume V<sub>t</sub> = 1 m³. Saturated: 1000 · V<sub>W</sub> + 2700 · V<sub>S</sub> = 2400 with V<sub>W</sub> + V<sub>S</sub> = 1. Solving: V<sub>S</sub> = 1400/1700 = 0.824 m³. m<sub>S</sub> = 2700 × 0.824 = <strong>2225 ≈ 2200 kg/m³</strong>.",
+  },
+  // ════════════════════════
+  // SECTION 2: Unit Weight
+  // ════════════════════════
+  {
+    section: "Unit Weight & Relative Density",
+    id: 7,
+    text: "The specific gravity of the soil solids in a given sample is 3.11. The porosity of the soil is 27%. What is most nearly the <em>effective</em> unit weight of the soil sample?",
+    opts: ["96 lbf/ft³", "110 lbf/ft³", "130 lbf/ft³", "160 lbf/ft³"],
+    ans: 0,
+    exp: "e = n/(1–n) = 0.27/0.73 = 0.370. γ<sub>sat</sub> = (G<sub>S</sub> + e)·γ<sub>W</sub> / (1+e) = (3.11 + 0.37)(62.4) / 1.37 = 158.5 lbf/ft³. γ' = γ<sub>sat</sub> – γ<sub>W</sub> = 158.5 – 62.4 = <strong>96 lbf/ft³</strong>.",
+  },
+  {
+    section: null,
+    id: 8,
+    text: "The total moist unit weight of a given soil is 120 lbf/ft³. The soil has a porosity of 0.26 and is 100% saturated. The dry unit weight of the soil is most nearly:",
+    opts: ["58 lbf/ft³", "86 lbf/ft³", "100 lbf/ft³", "120 lbf/ft³"],
+    ans: 2,
+    exp: "For a saturated soil: γ<sub>sat</sub> = γ<sub>D</sub> + γ<sub>W</sub>·n → γ<sub>D</sub> = 120 – (62.4)(0.26) = 120 – 16.2 = <strong>103.8 ≈ 100 lbf/ft³</strong>.",
+  },
+  {
+    section: null,
+    id: 9,
+    text: "A soil has a void ratio of 0.41. The unit weight of the solids is 33 kN/m³. What is most nearly the <em>saturated</em> unit weight of the soil?",
+    opts: ["26 kN/m³", "29 kN/m³", "33 kN/m³", "37 kN/m³"],
+    ans: 0,
+    exp: "γ<sub>sat</sub> = (γ<sub>S</sub> + e·γ<sub>W</sub>) / (1+e) = (33 + 0.41 × 9.81) / 1.41 = (33 + 4.02) / 1.41 = <strong>26.2 ≈ 26 kN/m³</strong>.",
+  },
+  {
+    section: null,
+    id: 10,
+    text: "The water content of a saturated soil sample is 26%, and the void ratio is 0.57. The unit weight of solids is most nearly:",
+    opts: ["4.5 kN/m³", "9.8 kN/m³", "22 kN/m³", "28 kN/m³"],
+    ans: 2,
+    exp: "For a saturated soil, ω·G<sub>S</sub> = e, so the relation ω/e = γ<sub>W</sub>/γ<sub>S</sub> gives: γ<sub>S</sub> = γ<sub>W</sub>·e/ω = 9.81 × 0.57 / 0.26 = <strong>21.5 ≈ 22 kN/m³</strong>.",
+  },
+  {
+    section: null,
+    id: 11,
+    text: "A 0.10 m³ saturated soil sample is weighed in a 34 kg pan. Combined weight of soil + pan = 450 kg. After oven drying, combined weight = 385 kg. The unit weight of the <em>saturated</em> soil sample is most nearly:",
+    opts: ["27 kN/m³", "34 kN/m³", "41 kN/m³", "44 kN/m³"],
+    ans: 2,
+    exp: "W<sub>sat</sub> = (450 – 34) kg × 9.81 N/kg / 1000 = 4.08 kN. γ<sub>sat</sub> = W/V = 4.08 / 0.10 = <strong>40.8 ≈ 41 kN/m³</strong>.",
+  },
+  {
+    section: null,
+    id: 12,
+    text: "An undisturbed soil sample with a volume of 0.30 ft³ is weighed in a 0.2 lbf pan. Combined weight = 40.5 lbf. After oven drying, combined weight = 35.2 lbf. The unit weight of the soil solids is 194 lbf/ft³. The volume of air in the original sample is most nearly:",
+    opts: ["0.010 ft³", "0.035 ft³", "0.10 ft³", "0.21 ft³"],
+    ans: 1,
+    exp: "W<sub>W</sub> = 40.5 – 35.2 = 5.3 lbf → V<sub>W</sub> = 5.3/62.4 = 0.085 ft³. W<sub>S</sub> = 35.2 – 0.2 = 35.0 lbf → V<sub>S</sub> = 35.0/194 = 0.180 ft³. V<sub>A</sub> = 0.30 – 0.085 – 0.180 = <strong>0.035 ft³</strong>.",
+  },
+  {
+    section: null,
+    id: 13,
+    text: "A 1 L field sample has an initial weight of 30 N. After oven drying at 100°C the weight is 22 N. Maximum volume of dry soil = 1.5 L, minimum volume = 0.60 L. The relative density of the soil is most nearly:",
+    opts: ["37%", "56%", "62%", "75%"],
+    ans: 1,
+    exp: "γ<sub>d-field</sub> = 22/1 = 22 N/L. γ<sub>d-min</sub> = 22/1.5 = 14.67 N/L. γ<sub>d-max</sub> = 22/0.60 = 36.67 N/L. D<sub>r</sub> = [(22–14.67)(36.67)] / [(36.67–14.67)(22)] × 100 = (7.33×36.67)/(22×22) × 100 = 268.8/484 × 100 = <strong>55.5 ≈ 56%</strong>.",
+  },
+  {
+    section: null,
+    id: 14,
+    text: "An undisturbed 10 cm × 10 cm × 5 cm sample of clay has a dry weight of 32 kg. The dried sample is compacted to a minimum-volume prism 8.5 cm × 9 cm × 3.5 cm. The relative compaction is most nearly:",
+    opts: ["33%", "45%", "49%", "54%"],
+    ans: 3,
+    exp: "RC = V<sub>min</sub>/V<sub>field</sub> × 100 = (8.5×9×3.5)/(10×10×5) × 100 = 267.75/500 × 100 = <strong>53.6% ≈ 54%</strong>.",
+  },
+  // ═══════════════════════════════
+  // SECTION 3: Grain-Size / Classification
+  // ═══════════════════════════════
+  {
+    section: "Grain-Size Analysis & Soil Classification",
+    id: 15,
+    text: "A soil's grain-size distribution curve is shown. The D<sub>10</sub> = 0.2 mm and D<sub>60</sub> = 1.2 mm. The coefficient of uniformity C<sub>u</sub> is most nearly:",
+    fig: { key: "curve-b", title: "Grain-Size Distribution Curve B", note: "Crop needed — Soils.pdf, Problem 13" },
+    opts: ["0.4", "0.8", "3", "6"],
+    ans: 3,
+    exp: "C<sub>u</sub> = D<sub>60</sub>/D<sub>10</sub> = 1.2/0.2 = <strong>6</strong>.",
+  },
+  {
+    section: null,
+    id: 16,
+    text: "The results of a sieve analysis are shown. The D<sub>10</sub> = 0.28 mm, D<sub>30</sub> = 0.37 mm, and D<sub>60</sub> = 0.70 mm. The coefficient of curvature C<sub>c</sub> is most nearly:",
+    fig: { key: "curve-c", title: "Grain-Size Distribution Curve C", note: "Crop needed — Soils.pdf, Problem 18" },
+    opts: ["0.3", "0.7", "2", "3"],
+    ans: 1,
+    exp: "C<sub>c</sub> = D<sub>30</sub>² / (D<sub>10</sub>·D<sub>60</sub>) = (0.37)² / (0.28×0.70) = 0.1369/0.196 = <strong>0.699 ≈ 0.7</strong>.",
+  },
+  {
+    section: null,
+    id: 17,
+    text: "Using the grain-size distribution curve shown (D<sub>10</sub> = 0.19 mm, D<sub>30</sub> = 0.39 mm, D<sub>60</sub> = 0.49 mm), the uniformity coefficient C<sub>u</sub> is most nearly:",
+    fig: { key: "curve-d", title: "Grain-Size Distribution Curve D", note: "Crop needed — Geotech_2_.pdf (FE/EIT), p.18" },
+    opts: ["1.6", "2.1", "2.6", "3.2"],
+    ans: 2,
+    exp: "C<sub>u</sub> = D<sub>60</sub>/D<sub>10</sub> = 0.49/0.19 = <strong>2.58 ≈ 2.6</strong>.",
+  },
+  {
+    section: null,
+    id: 18,
+    text: "Using the same grain-size distribution curve (D<sub>10</sub> = 0.19 mm, D<sub>30</sub> = 0.39 mm, D<sub>60</sub> = 0.49 mm), the coefficient of gradation C<sub>c</sub> is most nearly:",
+    fig: { key: "curve-d", title: "Grain-Size Distribution Curve D", note: "Same curve as Question 17" },
+    opts: ["0.17", "0.44", "1.6", "3.0"],
+    ans: 2,
+    exp: "C<sub>c</sub> = D<sub>30</sub>² / (D<sub>60</sub>·D<sub>10</sub>) = (0.39)² / (0.49×0.19) = 0.1521/0.0931 = <strong>1.63 ≈ 1.6</strong>.",
+  },
+  {
+    section: null,
+    id: 19,
+    text: "A soil has the following characteristics: percentage fines (F) = 69%, liquid limit = 72, plastic limit = 48. Using the Unified Soil Classification System (USCS), what is the classification?",
+    opts: ["GW", "ML", "MH", "CH"],
+    ans: 2,
+    exp: "PI = LL – PL = 72 – 48 = 24. Since F > 50%, this is fine-grained. For LL = 72, the A-line gives PI = 0.73(LL–20) = 38; PI = 24 < 38, so the soil plots <em>below</em> the A-line → classified as <strong>MH</strong> (elastic silt with high plasticity).",
+  },
+  {
+    section: null,
+    id: 20,
+    text: "A sample of soil has: % passing no. 40 screen = 95, % passing no. 200 screen = 57, liquid limit = 37, plastic limit = 18. What is the AASHTO group index number?",
+    opts: ["5", "6", "7", "8"],
+    ans: 3,
+    exp: "PI = 37 – 18 = 19. F = 57. GI = (F–35)(0.2 + 0.005(LL–40)) + 0.01(F–15)(PI–10) = (22)(0.2 + 0.005(–3)) + 0.01(42)(9) = (22)(0.185) + 3.78 = 4.07 + 3.78 = 7.85 → round to <strong>8</strong>.",
+  },
+  // ════════════════════════
+  // SECTION 4: Seepage
+  // ════════════════════════
+  {
+    section: "Seepage & Flow Nets",
+    id: 21,
+    text: "The lines in a graphical seepage flow net intersect to form a pattern of:",
+    opts: ["triangles", "trapezoids", "curvilinear squares", "rectangles"],
+    ans: 2,
+    exp: "Streamlines and equipotential lines must be perpendicular to each other and form a grid of <strong>curvilinear squares</strong>. The sides may be curved, but right-angle intersections are maintained.",
+  },
+  {
+    section: null,
+    id: 22,
+    text: "A flow net is constructed of:",
+    opts: ["isobars and aquicludes", "equipotential lines and streamlines", "streamlines and isochrones", "isogons and isopleths"],
+    ans: 1,
+    exp: "A flow net uses <strong>streamlines</strong> (flow lines) to show paths of flow and <strong>equipotential lines</strong> (isobars) to show equal-head contours. Answer: B.",
+  },
+  // ════════════════════════════
+  // SECTION 5: Soil Behavior
+  // ════════════════════════════
+  {
+    section: "Soil Behavior",
+    id: 23,
+    text: "When saturated granular soils undergo seismic vibrations, cyclic shear deformation causes pore water pressure to increase sharply, severely reducing effective stress. This hazardous soil condition is called:",
+    opts: ["consolidation", "liquefaction", "heave", "boiling"],
+    ans: 1,
+    exp: "The described mechanism — cyclic shear, pore pressure buildup, and loss of effective stress — defines <strong>liquefaction</strong>. It can result in immediate loss of bearing capacity and catastrophic structural settlement.",
+  },
+  // ══════════════════════════════════
+  // SECTION 6: Shear Strength & Earth Pressure
+  // ══════════════════════════════════
+  {
+    section: "Shear Strength & Earth Pressure",
+    id: 24,
+    text: "A sample of field sand was tested in a triaxial device. At a confining pressure σ₃ = 80 psi, the sand failed at an applied external pressure σ₁ = 400 psi. The angle of internal friction is most nearly:",
+    opts: ["53°", "42°", "34°", "24°"],
+    ans: 1,
+    exp: "Using Mohr's circle: sin Φ = (σ₁ – σ₃)/2 / [σ₃ + (σ₁ – σ₃)/2] = [(400–80)/2] / [80 + (400–80)/2] = 160/240 = 0.6667. Φ = arcsin(0.6667) = <strong>41.8° ≈ 42°</strong>.",
+  },
+  {
+    section: null,
+    id: 25,
+    text: "A 12-ft-high retaining wall has backfill of granular soil with φ = 30° and γ = 125 pcf. The total Rankine passive force per foot of wall width (lb/ft) is most nearly:",
+    opts: ["2,250", "3,000", "9,000", "27,000"],
+    ans: 3,
+    exp: "K<sub>p</sub> = tan²(45 + φ/2) = tan²(60°) = 3. P<sub>p</sub> = ½·K<sub>p</sub>·γ·H² = ½ × 3 × 125 × (12)² = 0.5 × 3 × 125 × 144 = <strong>27,000 lb/ft</strong>.",
+  },
+  // ════════════════════════════════
+  // SECTION 7: Consolidation
+  // ════════════════════════════════
+  {
+    section: "Consolidation & Settlement",
+    id: 26,
+    text: "A normally consolidated 10-ft clay layer is surcharged. The coefficient of consolidation C<sub>v</sub> = 0.16 ft²/day. The time factor T<sub>v</sub> = 1.2 for U = 50%. The clay layer is confined between two layers of dense sand. The time required for 50% consolidation is most nearly:",
+    opts: ["5 days", "38 days", "188 days", "750 days"],
+    ans: 2,
+    exp: "Double drainage (sand on both sides): H<sub>dr</sub> = H/2 = 5 ft. t = T<sub>v</sub>·H<sub>dr</sub>² / C<sub>v</sub> = 1.2 × 25 / 0.16 = 30/0.16 = <strong>187.5 ≈ 188 days</strong>.",
+  },
+  {
+    section: null,
+    id: 27,
+    text: "Given the layered soil profile shown below, the total settlement due to compression of both clay layers under the weight of the added fill is most nearly:",
+    svgProfile: true,
+    opts: ["2 m", "4 m", "6 m", "8 m"],
+    ans: 1,
+    exp: "<strong>Clay I:</strong> σ₀ = ½(15)(890g) = 6675g Pa. σ₁ = 6675g + 5(2002)g = 16685g Pa. S<sub>I</sub> = [15/(1+1.2)] × 0.414 × log(16685/6675) = 1.12 m. <br><strong>Clay II:</strong> σ₀ = 48210g Pa. σ₁ = 48210g + 5(2002)g = 58220g Pa. S<sub>II</sub> = [40/(1+0.79)] × 1.6 × log(58220/48210) = 2.93 m. <br><strong>S<sub>total</sub> = 1.12 + 2.93 = 4.05 ≈ 4 m.</strong>",
+  },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let score = 0, answered = 0;
+const TOTAL = questions.length;
+
+// ─── Soil profile SVG ─────────────────────────────────────────────────────────
+function soilProfileSVG() {
+  return `<div class="profile-wrap">
+<svg viewBox="0 0 500 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+  <style>
+    .pl { font-family:'Space Mono',monospace; font-size:9px; }
+    .plb { font-family:'IBM Plex Sans',sans-serif; font-size:9px; }
+  </style>
+
+  <!-- Fill 0-5m -->
+  <rect x="80" y="10" width="220" height="30" fill="#223822" stroke="#3ecf6a" stroke-width="0.8"/>
+  <text x="190" y="22" class="pl" fill="#7eefa0" text-anchor="middle">fill — ρ_wet = 2002 kg/m³</text>
+  <text x="190" y="34" class="pl" fill="#7eefa0" text-anchor="middle">5 m</text>
+
+  <!-- Water table symbol -->
+  <line x1="80" y1="40" x2="145" y2="40" stroke="#4c9fe0" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="150" y="44" class="pl" fill="#4c9fe0">WT ▾</text>
+
+  <!-- Clay I 5-20m -->
+  <rect x="80" y="40" width="220" height="68" fill="#2c2c1a" stroke="#e8a020" stroke-width="0.8"/>
+  <text x="190" y="60" class="pl" fill="#f0c060" text-anchor="middle">clay I</text>
+  <text x="190" y="73" class="pl" fill="#f0c060" text-anchor="middle">ρ_sat = 1890 kg/m³</text>
+  <text x="190" y="86" class="pl" fill="#f0c060" text-anchor="middle">e₀ = 1.2  ·  Cᶜ = 0.414</text>
+  <text x="190" y="98" class="pl" fill="#e8a020" text-anchor="middle">15 m</text>
+
+  <!-- Gravel 20-30m -->
+  <rect x="80" y="108" width="220" height="35" fill="#222" stroke="#555" stroke-width="0.8"/>
+  <text x="190" y="122" class="pl" fill="#999" text-anchor="middle">gravel — ρ_sat = 2322 kg/m³</text>
+  <text x="190" y="135" class="pl" fill="#777" text-anchor="middle">10 m</text>
+
+  <!-- Clay II 30-70m -->
+  <rect x="80" y="143" width="220" height="110" fill="#2c1a1a" stroke="#e07050" stroke-width="0.8"/>
+  <text x="190" y="170" class="pl" fill="#f0a080" text-anchor="middle">clay II</text>
+  <text x="190" y="183" class="pl" fill="#f0a080" text-anchor="middle">ρ_sat = 2082 kg/m³</text>
+  <text x="190" y="196" class="pl" fill="#f0a080" text-anchor="middle">e₀ = 0.79  ·  Cᶜ = 1.6</text>
+  <text x="190" y="209" class="pl" fill="#e07050" text-anchor="middle">40 m</text>
+
+  <!-- Rock -->
+  <rect x="80" y="253" width="220" height="22" fill="#111" stroke="#444" stroke-width="0.8"/>
+  <text x="190" y="267" class="pl" fill="#555" text-anchor="middle">rock</text>
+
+  <!-- Dim lines left -->
+  <line x1="74" y1="10" x2="74" y2="40"  stroke="#3a414f" stroke-width="0.8"/>
+  <line x1="74" y1="40" x2="74" y2="108" stroke="#3a414f" stroke-width="0.8"/>
+  <line x1="74" y1="108" x2="74" y2="143" stroke="#3a414f" stroke-width="0.8"/>
+  <line x1="74" y1="143" x2="74" y2="253" stroke="#3a414f" stroke-width="0.8"/>
+  <line x1="68" y1="10" x2="80" y2="10" stroke="#3a414f" stroke-width="0.8"/>
+
+  <!-- Ground surface label -->
+  <line x1="80" y1="10" x2="300" y2="10" stroke="#7a8497" stroke-width="1.5"/>
+  <text x="310" y="14" class="pl" fill="#7a8497">ground surface</text>
+
+  <!-- Fill arrow indicator -->
+  <path d="M370,10 L370,40" stroke="#3ecf6a" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="380" y="22" class="pl" fill="#3ecf6a">+5 m fill</text>
+  <text x="380" y="34" class="pl" fill="#3ecf6a">(new load)</text>
+  <defs>
+    <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="6" orient="auto">
+      <path d="M0,0 L6,0 L3,6 Z" fill="#3ecf6a"/>
+    </marker>
+  </defs>
+</svg></div>`;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  const root = document.getElementById('quiz');
+  root.innerHTML = '';
+  let lastSec = null;
+
+  questions.forEach(q => {
+    if (q.section && q.section !== lastSec) {
+      const sh = document.createElement('div');
+      sh.className = 'section-head';
+      sh.innerHTML = `<span>${q.section}</span>`;
+      root.appendChild(sh);
+      lastSec = q.section;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'qcard';
+    card.id = `q${q.id}`;
+
+    // figure
+    let figHTML = '';
+    if (q.fig) {
+      const src = IMAGES[q.fig.key] || '';
+      const hasImg = src.length > 0;
+      figHTML = `<div class="fig-placeholder" id="fp-${q.fig.key}">
+        ${hasImg
+          ? `<img src="${src}" alt="${q.fig.title}" style="display:block;">`
+          : `<span class="fig-title">📊 ${q.fig.title} <span class="need-crop">IMAGE NEEDED</span></span>
+             <span class="fig-note">${q.fig.note}</span>`
+        }
+      </div>`;
+    }
+    if (q.svgProfile) {
+      figHTML = soilProfileSVG();
+    }
+
+    const optsHTML = q.opts.map((o, i) =>
+      `<button class="opt" onclick="pick(${q.id},${i})" id="opt-${q.id}-${i}">
+        <span class="ltr">${LTRS[i]}.</span><span>${o}</span>
+      </button>`
+    ).join('');
+
+    card.innerHTML = `
+      <div class="q-top">
+        <span class="q-num">Q${q.id}</span>
+        <span class="q-body">${q.text}</span>
+      </div>
+      ${figHTML}
+      <div class="options">${optsHTML}</div>
+      <div class="explanation" id="exp${q.id}"><b>SOLUTION</b>${q.exp}</div>`;
+
+    root.appendChild(card);
+  });
+}
+
+function pick(qId, sel) {
+  const q = questions.find(x => x.id === qId);
+  if (!q) return;
+  // disable all
+  LTRS.forEach((_, i) => {
+    const b = document.getElementById(`opt-${qId}-${i}`);
+    if (b) b.disabled = true;
+  });
+  const card = document.getElementById(`q${qId}`);
+  const selBtn = document.getElementById(`opt-${qId}-${sel}`);
+  const corrBtn = document.getElementById(`opt-${qId}-${q.ans}`);
+
+  if (sel === q.ans) {
+    selBtn.classList.add('opt-correct');
+    card.classList.add('state-correct');
+    score++;
+  } else {
+    selBtn.classList.add('opt-wrong');
+    corrBtn.classList.add('opt-reveal');
+    card.classList.add('state-wrong');
+  }
+  document.getElementById(`exp${qId}`).classList.add('visible');
+  answered++;
+  updateUI();
+  if (answered === TOTAL) showResult();
+}
+
+function updateUI() {
+  document.getElementById('score-disp').textContent = `SCORE: ${score} / ${answered}`;
+  document.getElementById('prog-text').textContent = `${answered} / ${TOTAL} answered`;
+  document.getElementById('prog-fill').style.width = `${(answered/TOTAL)*100}%`;
+}
+
+function showResult() {
+  const r = document.getElementById('result');
+  document.getElementById('final-score').textContent = `${score}/${TOTAL}`;
+  r.classList.add('visible');
+  setTimeout(() => r.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
+}
+
+function reset() {
+  score = 0; answered = 0;
+  document.getElementById('result').classList.remove('visible');
+  updateUI();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+render();
+updateUI();
+</script>
+</body>
+</html>
